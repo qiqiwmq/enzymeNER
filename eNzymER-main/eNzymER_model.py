@@ -439,7 +439,7 @@ class eNzymER(object):
     def test(self, textfile, annotfile):
         # performance per label type per token
         cr = CorpusReader(textfile, annotfile, bert_pretrain_path = self.bert_pretrain_path)
-        seqs = cr.testseqs #+ cr.trainseqs
+        seqs = cr.testseqs + cr.trainseqs
         labels = set()
 
         for seq in seqs:

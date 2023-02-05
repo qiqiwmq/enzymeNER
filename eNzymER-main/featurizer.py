@@ -118,18 +118,16 @@ class Featurizer(object):
                 model: if not None, a text file or JSON object produced by the Featurizer
         """
         self.extrachem = extrachem
+        self.bert_pretrain_path = bert_pretrain_path
+        self.tokenizer = AutoTokenizer.from_pretrained(self.bert_pretrain_path, do_lower_case=False)
+        self._load_dicts()
         
-
         if train is not None:
             self._init_train(train)
         else:
             # model can be a text file or a JSON object
             self._deserialize(model)
-
-        self.bert_pretrain_path = bert_pretrain_path
-        self.tokenizer = AutoTokenizer.from_pretrained(self.bert_pretrain_path, do_lower_case=False)
-        self._load_dicts()
-
+            
     def _init_train(self, train):
         self.train = train
 

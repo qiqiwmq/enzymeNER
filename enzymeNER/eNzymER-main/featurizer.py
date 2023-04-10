@@ -10,7 +10,7 @@ from collections import Counter
 import json
 from extract_rf import ExtractedRandomForest
 
-from transformers import AutoTokenizer, AutoModelForMaskedLM, BertTokenizer
+from transformers import AutoTokenizer
 
 
 def _getpath(fn):

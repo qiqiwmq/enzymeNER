@@ -1,16 +1,15 @@
+import time
 import os
 import re
 import math
 import json
-import time
 import random
 import numpy as np
-
 from sklearn.ensemble import RandomForestClassifier
 from collections import Counter
+from extract_rf import ExtractedRandomForest
 from transformers import AutoTokenizer
 
-from extract_rf import ExtractedRandomForest
 
 def _getpath(fn):
     if __name__ == "__main__":
@@ -21,13 +20,6 @@ def _getpath(fn):
 
 def mi(joint, a, b, total):
     """
-    Signed Mutual information between two binary things.
-    Example: papers in a corpus that may or may not contain Word A or Word B
-    Args:
-        joint: number of items containing both A and B
-        a: number of items containing A (regardless of B)
-        b: number of items containing B (regardless of A)
-        total: number of items (regardless of A or B)
     Returns:
         Mutual Information between A and B, multiplied by -1 if A and B are anti-correlated.
     """
@@ -81,13 +73,6 @@ ws_sc = re.compile("[A-Z]")
 
 
 def wordshape(word):
-    """
-    Transform a word to a "word shape" - a string of digits indicating what sorts of characters are involved. 
-    Args:
-            word: the word to transform
-    Returns:
-            a string.	
-    """
     ws = word
     ws = ws_d.sub("0", ws)
     ws = ws_l.sub("1", ws)
@@ -102,17 +87,10 @@ class Featurizer(object):
     Generates token-internal features for individual tokens, mainly to tell whether they are part of a chemical
     named entity or not. Most notable - output from a Random Forest.
     """
-
     def __init__(self, train=None, model=None, extrachem=None, bert_pretrain_path='allenai/scibert_scivocab_cased'):
-        """
-        Args:
-            train: if not None, the training sequences from corpusreader
-            model: if not None, a text file or JSON object produced by the Featurizer
-        """
-        self.bert_pretrain_path = bert_pretrain_path
         self.extrachem = extrachem
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.bert_pretrain_path, do_lower_case=False)
+        self.bert_pretrain_path = bert_pretrain_path
+        self.tokenizer = AutoTokenizer.from_pretrained(self.bert_pretrain_path, do_lower_case=False)
         self._load_dicts()
 
         if train is not None:
@@ -123,6 +101,7 @@ class Featurizer(object):
 
     def _init_train(self, train):
         self.train = train
+
         self.cache = {}
 
         # Tokens that are in entities...
@@ -191,7 +170,8 @@ class Featurizer(object):
         # Count how many times the features appear in e and o tokens
         ecounts = [0 for i in lstrfeats]
         ocounts = [0 for i in lstrfeats]
-        tecount, tocount = 0, 0
+        tecount = 0
+        tocount = 0
         for i in range(len(self.feats)):
             counts = ecounts if self.isne[i] else ocounts
             if self.isne[i]:
@@ -240,8 +220,8 @@ class Featurizer(object):
         # Load in a few lexicons
         self.usdw = set()
         self.usdwl = set()
-        f = open(_getpath("words.txt"), "r",
-                 encoding="utf-8", errors="replace")
+
+        f = open(_getpath("words.txt"), "r", encoding="utf-8", errors="replace")
         for l in f:
             l = l.strip()
             if len(l) > 0:
@@ -249,12 +229,35 @@ class Featurizer(object):
                 self.usdwl.add(l.lower())
         self.elements = set()
 
+        self.chebinames = set()
+        self.chebinamesl = set()
+        self.chebinameswl = set()
+                
+        f = open("eNzymER-main/FeatureNames.txt", "r", encoding="utf-8", errors="replace")
+        for l in f:
+            l = l.strip()
+            if len(l) > 0:
+                ct = list(self.tokenizer.tokenize(l))
+                for tok in ct:
+                    self.chebinames.add(tok)
+                    self.chebinamesl.add(tok.lower())
+                if len(ct) == 1:
+                    self.chebinameswl.add(l.lower())
+        if self.extrachem is not None:
+            self.chemspider = set()
+            self.chemspiderl = set()
+            f = open(self.extrachem, "r", encoding="utf-8", errors="replace")
+            for l in f:
+                l = l.strip()
+                if len(l) > 0:
+                    ct = self.tokenizer(l)
+                    for tok in ct.getTokenStringList():
+                        self.chemspider.add(tok)
+                        self.chemspiderl.add(tok.lower())
+
     def to_json_obj(self):
         """
         Makes an object suitable for JSON serialization that can be loaded back in later.
-
-        Returns:
-                dictionary
         """
         jo = {}
         jo["selfeat"] = self.selfeat
@@ -293,8 +296,6 @@ class Featurizer(object):
         fp = 0
         fn = 0
         tn = 0
-        # 5-fold cross-validation - mainly to see what's going on,
-        # but also to get scores for tokens in our training set
         for fold in range(5):
             # select
             testset = []
@@ -387,10 +388,16 @@ class Featurizer(object):
                 rf_feats.append("re="+featre)
         if tok in self.usdw:
             rf_feats.append("dict=usdw")
+        if tok in self.chebinames:
+            rf_feats.append("dict=chebi")
         if self.extrachem is not None and tok in self.chemspider:
             rf_feats.append("dict=cs")
         if tok.lower() in self.usdwl:
             rf_feats.append("dict=usdwl")
+        if tok.lower() in self.chebinamesl:
+            rf_feats.append("dict=chebil")
+        if tok.lower() in self.chebinameswl:
+            rf_feats.append("dict=chebiwl")
         if self.extrachem is not None and tok.lower() in self.chemspiderl:
             rf_feats.append("dict=csl")
 
@@ -398,7 +405,11 @@ class Featurizer(object):
         # we want to pass them direct to the neural net
         num_feats.extend([
             1 if tok in self.usdw else 0,
+            1 if tok in self.chebinames else 0,
+            #1 if tok in self.chemspider else 0,
             1 if tok.lower() in self.usdwl else 0,
+            1 if tok.lower() in self.chebinamesl else 0,
+            1 if tok.lower() in self.chebinameswl else 0  # ,
         ])
         num_feats.extend(
             [1 if featres[featre].match(tok) else 0 for featre in frk])
@@ -412,13 +423,6 @@ class Featurizer(object):
         return (num_feats, set(rf_feats), set(nn_feats))
 
     def num_feats_for_tok(self, tok):
-        """
-        Generate numerical features for a token.
-        Args:
-            tok: the token string
-        Returns:
-            Numpy array of floats
-        """
         if tok in self.cache:
             return self.cache[tok]
         feats = self._feats_for_tok(tok)

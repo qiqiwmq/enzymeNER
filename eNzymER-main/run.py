@@ -30,10 +30,6 @@ if __name__ == '__main__':
         em.train(args.train_set, args.train_annotset, args.model)
     else:
         em.load(args.test_json, args.pretrain_model)
-        # if wdEmbed == "BioBERT":
-        #     em.load('eNzymER_BioModel.json',
-        #             './BioBertModels/epoch_9_BioModel_weights')
-        #em.test('./TestSet/test.txt', './TestSet/testAnnotated.txt')
         em.test(args.test_set, args.test_annotset)
         res = em.process("By using MMP-14 transfection, 12-O-tetradecanoylphorbol-13-acetate stimulation, and MMPI blockade, we showed the dynamic nature of proteolytic shedding and that the accumulation of cleaved ectodomains and protein fragments was proteinase dependent, executed by the cell surface membrane type 1 matrix metalloproteinase, MMP-14.")
         print(res)

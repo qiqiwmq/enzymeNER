@@ -30,4 +30,4 @@ To use this script, you need to fit the some path to your own ones.
 
 ```output_folder``` is the path to the folder where the annotated files will be saved.
 
-Than you can freely run this script using python command.
+Then, you can freely run this script using python command.

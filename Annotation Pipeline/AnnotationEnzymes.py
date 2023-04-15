@@ -371,12 +371,12 @@ if __name__ == "__main__":
     start_time = time.time()
     
     dict_ec_number = {}
-    ec_number_path = ('Auto-CORPus/KEGG_EC_Enzymes.json')
+    ec_number_path = ('EnzymeLists/KEGG_EC_Enzymes.json')
     with open(ec_number_path, 'r', encoding = 'utf-8') as ec_number:
         ec_number_list = json.load(ec_number)
     ec_number.close()
     
-    enzymes_path = ("Auto-CORPus/Classification.json")
+    enzymes_path = ("/Classified_Enzyme_List.json")
     with open(enzymes_path, 'r', encoding = 'utf-8') as enzymes:
         enzymes_dict = json.load(enzymes)
     enzymes.close()

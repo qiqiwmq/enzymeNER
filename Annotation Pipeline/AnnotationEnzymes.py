@@ -371,23 +371,24 @@ if __name__ == "__main__":
     start_time = time.time()
     
     dict_ec_number = {}
-    ec_number_path = ('EnzymeLists/KEGG_EC_Enzymes.json')
+    ec_number_path = ('./EnzymeLists/KEGG_EC_Enzymes.json')
     with open(ec_number_path, 'r', encoding = 'utf-8') as ec_number:
         ec_number_list = json.load(ec_number)
     ec_number.close()
     
-    enzymes_path = ("/Classified_Enzyme_List.json")
+    enzymes_path = ("./EnzymeLists/Classified_Enzyme_List.json")
     with open(enzymes_path, 'r', encoding = 'utf-8') as enzymes:
         enzymes_dict = json.load(enzymes)
     enzymes.close()
     
-    print_path = ("Auto-CORPus/printnew-GWAS.txt")
+    print_path = ("./EnzymeLists/printnew-GWAS.txt")
     w = open (print_path, 'a',encoding = 'utf-8')
     
-    bracket_path = ("Auto-CORPus/After_word.txt")
+    bracket_path = ("./EnzymeLists/After_word.txt")
     with open(bracket_path, 'r') as bracket:
         list_bracket = bracket.readlines()
     bracket.close()
+    text_folder_path = "Auto-CORPus/output-GWAS/Main_Text"    
         
     # if there is a request to give the past time of a verb?
     notase_list = ['release','increase', 'database', 'base', 'disease','decrease', 'case']
@@ -412,9 +413,9 @@ if __name__ == "__main__":
     kw_num = 0
     abbre_file = 0
     
-    for filename in os.listdir('Auto-CORPus/output-GWAS/Main_Text'):
+    for filename in os.listdir(text_folder_path):
         if re.match('(.*).json$', filename):
-            file_path = 'Auto-CORPus/output-GWAS/Main_Text/' + filename
+            file_path = os.path.join(text_folder_path, filename)
             with open(file_path, 'r', encoding = 'utf-8') as file: # windows 10 has the 'gbk' codec problem without encoding = 'utf-8'
                 fulltext = json.load(file)    
             file.close()
@@ -424,7 +425,6 @@ if __name__ == "__main__":
             abbre_list = abbre_enzyme_list(filename)
             if abbre_list:
                 abbre_file += 1
-            
         else:
             continue  
         
@@ -479,7 +479,6 @@ if __name__ == "__main__":
             print(s)
         '''        
     w.close()
-
     
     print('The total time of running {} files is: '.format(file_num) + str(time.time() - start_time) + '.')
     print('There are {} files which can be found abbreviations of enzymes.'.format(abbre_file))

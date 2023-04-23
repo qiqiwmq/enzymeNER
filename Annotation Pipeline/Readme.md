@@ -22,7 +22,7 @@ All the files which are the given enzyme-relative lists and would be used during
 
 ## How to use
 
-To use this script, you need to fit the some path to your own ones.
+To use this script, you need to fit some paths to your own ones.
 
 ```text_folder_path``` is the path to the folder of biomedical texts processed by Auto-CORPus.
 
